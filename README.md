@@ -36,10 +36,11 @@ Warehouse Performance Score  | DAX-generated combined operational score
  
 <br> 🧮 DAX Measures Used
  
-All DAX formulas are included in all-measures.txt.
+All DAX formulas are included below:
+<br>👉 [all-measures.txt](PowerBI_Logistics_Warehouse/DAX-measures/01_all-measures.txt)
 
 
-📁 Repository Structure
+<br>📁 Repository Structure
 <br><br>📦 inventory-performance-dashboard
 <br>│
 <br>├── 📁 PowerBI
