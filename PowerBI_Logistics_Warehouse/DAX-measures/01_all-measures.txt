@@ -1,0 +1,141 @@
+Inventory Performance Dashboard – DAX Measures
+=============================================
+
+Table for measures: _Measures
+
+
+1) Total Inventory Value
+------------------------
+
+Total Inventory Value =
+SUMX(
+    logistics_dataset,
+    logistics_dataset[stock_level] * logistics_dataset[unit_price]
+)
+
+
+2) Days of Stock (per item)
+---------------------------
+
+Days of Stock =
+DIVIDE(
+    SELECTEDVALUE(logistics_dataset[stock_level]),
+    SELECTEDVALUE(logistics_dataset[daily_demand])
+)
+
+
+3) Average Days of Stock
+------------------------
+
+Avg Days of Stock =
+AVERAGEX(
+    logistics_dataset,
+    DIVIDE(
+        logistics_dataset[stock_level],
+        logistics_dataset[daily_demand]
+    )
+)
+
+
+4) Total Monthly Holding Cost
+-----------------------------
+
+Total Monthly Holding Cost =
+SUMX(
+    logistics_dataset,
+    logistics_dataset[stock_level]
+        * logistics_dataset[holding_cost_per_unit_day]
+        * 30
+)
+
+
+5) Stockout Rate
+----------------
+
+Stockout Rate =
+DIVIDE(
+    SUM(logistics_dataset[stockout_count_last_month]),
+    SUM(logistics_dataset[total_orders_last_month])
+)
+
+
+6) Risk Count (for donut chart)
+-------------------------------
+
+Risk Count =
+COUNTROWS(logistics_dataset)
+
+
+7) Fulfillment Score (0–1)
+--------------------------
+
+Fulfillment Score =
+AVERAGE(logistics_dataset[order_fulfillment_rate])
+
+
+8) Layout Score (0–1)
+---------------------
+
+Layout Score =
+AVERAGE(logistics_dataset[layout_efficiency_score])
+
+
+9) Picking Speed Score (normalized 0–1)
+---------------------------------------
+
+Picking Speed Score =
+VAR MaxTime = MAX(logistics_dataset[picking_time_seconds])
+VAR MinTime = MIN(logistics_dataset[picking_time_seconds])
+RETURN
+AVERAGEX(
+    logistics_dataset,
+    DIVIDE(
+        MaxTime - logistics_dataset[picking_time_seconds],
+        MaxTime - MinTime
+    )
+)
+
+
+10) Turnover Score (normalized 0–1)
+-----------------------------------
+
+Turnover Score =
+VAR MaxT = MAX(logistics_dataset[turnover_ratio])
+VAR MinT = MIN(logistics_dataset[turnover_ratio])
+RETURN
+AVERAGEX(
+    logistics_dataset,
+    DIVIDE(
+        logistics_dataset[turnover_ratio] - MinT,
+        MaxT - MinT
+    )
+)
+
+
+11) Warehouse Performance Score (0–1, shown as %)
+------------------------------------------------
+
+Warehouse Performance Score =
+0.4 * [Fulfillment Score] +
+0.2 * [Layout Score] +
+0.2 * [Picking Speed Score] +
+0.2 * [Turnover Score]
+
+
+Calculated Columns (for reference)
+==================================
+
+A) Stock Risk (calculated column in logistics_dataset)
+------------------------------------------------------
+
+Stock Risk =
+VAR Stock = logistics_dataset[stock_level]
+VAR ReorderPoint = logistics_dataset[reorder_point]
+VAR Forecast7d = logistics_dataset[forecasted_demand_next_7d]
+RETURN
+SWITCH(
+    TRUE(),
+    Stock <= 0, "Out of Stock",
+    Stock < ReorderPoint || Forecast7d > Stock, "At Risk",
+    "OK"
+)
